@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aris-postgres
+    environment:
+      POSTGRES_DB: aris_db
+      POSTGRES_USER: aris_user
+      POSTGRES_PASSWORD: aris_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aris_user -d aris_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aris-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aris-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/aris_db
+      SPRING_DATASOURCE_USERNAME: aris_user
+      SPRING_DATASOURCE_PASSWORD: aris_password
+      JWT_SECRET: aris-jwt-secret-key-must-be-at-least-256-bits-for-hs256-algorithm
+      TZ: Asia/Seoul
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/logs:/app/logs
+      - ./backend/uploads:/app/uploads
+    networks:
+      - aris-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aris-frontend
+    ports:
+      - "3000:80"
+    environment:
+      TZ: Asia/Seoul
+    depends_on:
+      - backend
+    networks:
+      - aris-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  aris-network:
+    driver: bridge
+
+
+

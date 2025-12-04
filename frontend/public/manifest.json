@@ -1,0 +1,16 @@
+{
+  "name": "ARIS - IT 프로젝트 관리 시스템",
+  "short_name": "ARIS",
+  "description": "Advanced Request & Issue Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a4c",
+  "theme_color": "#1e3a4c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
