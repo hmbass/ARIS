@@ -2,50 +2,39 @@
 
 export interface Partner {
   id: number;
+  code: string;
   name: string;
   businessNumber: string;
   ceoName?: string;
-  address?: string;
-  contactPerson?: string;
-  phoneNumber?: string;
-  email?: string;
+  isClosed: boolean;
+  closedAt?: string;
   managerId?: number;
   managerName?: string;
-  isActive: boolean;
   createdAt: string;
+  createdBy: string;
   updatedAt: string;
+  updatedBy: string;
 }
 
 export interface PartnerCreateRequest {
   name: string;
   businessNumber: string;
   ceoName?: string;
-  address?: string;
-  contactPerson?: string;
-  phoneNumber?: string;
-  email?: string;
   managerId?: number;
 }
 
 export interface PartnerUpdateRequest {
-  name?: string;
-  businessNumber?: string;
+  name: string;
+  businessNumber: string;
   ceoName?: string;
-  address?: string;
-  contactPerson?: string;
-  phoneNumber?: string;
-  email?: string;
   managerId?: number;
-  isActive?: boolean;
 }
 
 export interface PartnerListParams {
   page?: number;
   size?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  isActive?: boolean;
-  search?: string;
+  name?: string;
+  isClosed?: boolean;
 }
 
 

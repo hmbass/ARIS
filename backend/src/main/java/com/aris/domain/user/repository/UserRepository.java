@@ -52,6 +52,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.company.id = :companyId AND u.isActive = true AND u.deletedAt IS NULL")
     Page<User> findActiveUsersByCompany(@Param("companyId") Long companyId, Pageable pageable);
+    
+    /**
+     * 활성화된 사용자 목록 조회 (PM 선택용)
+     */
+    Page<User> findByIsActiveTrueAndDeletedAtIsNull(Pageable pageable);
+    
+    /**
+     * 삭제되지 않은 사용자 목록 조회
+     */
+    Page<User> findByDeletedAtIsNull(Pageable pageable);
 }
 
 

@@ -1,5 +1,6 @@
 package com.aris.domain.issue.entity;
 
+import com.aris.domain.project.entity.Project;
 import com.aris.domain.sr.entity.ServiceRequest;
 import com.aris.domain.spec.entity.Specification;
 import com.aris.domain.user.entity.User;
@@ -32,12 +33,25 @@ public class Issue extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "spec_id")
     private Specification specification;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     @Column(nullable = false, length = 200)
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "issue_type", length = 20)
+    @Builder.Default
+    private IssueType issueType = IssueType.BUG;
+    
+    @Column(length = 20)
+    @Builder.Default
+    private String priority = "MEDIUM";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -71,6 +85,20 @@ public class Issue extends BaseEntity {
     public void updateStatus(IssueStatus status) {
         this.status = status;
     }
+    
+    /**
+     * 이슈 유형 변경
+     */
+    public void updateIssueType(IssueType issueType) {
+        this.issueType = issueType;
+    }
+    
+    /**
+     * 우선순위 변경
+     */
+    public void updatePriority(String priority) {
+        this.priority = priority;
+    }
 
     /**
      * 담당자 할당
@@ -79,10 +107,3 @@ public class Issue extends BaseEntity {
         this.assignee = assignee;
     }
 }
-
-
-
-
-
-
-

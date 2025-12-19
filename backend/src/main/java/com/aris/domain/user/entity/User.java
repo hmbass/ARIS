@@ -228,6 +228,13 @@ public class User extends BaseEntity {
     }
 
     /**
+     * 사번 수정
+     */
+    public void updateEmployeeNumber(String employeeNumber) {
+        this.employeeNumber = employeeNumber;
+    }
+
+    /**
      * 활성화 상태 토글
      */
     public void toggleActive() {

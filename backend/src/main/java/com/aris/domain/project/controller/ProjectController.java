@@ -5,6 +5,8 @@ import com.aris.domain.project.dto.ProjectResponse;
 import com.aris.domain.project.entity.ProjectStatus;
 import com.aris.domain.project.entity.ProjectType;
 import com.aris.domain.project.service.ProjectService;
+import com.aris.domain.user.dto.UserResponse;
+import com.aris.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,6 +31,7 @@ import java.time.LocalDate;
 public class ProjectController {
     
     private final ProjectService projectService;
+    private final UserService userService;
     
     @PostMapping
     @Operation(summary = "프로젝트 등록", description = "새로운 프로젝트를 등록합니다.")
@@ -83,6 +86,14 @@ public class ProjectController {
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/pm-candidates")
+    @Operation(summary = "PM 후보 사용자 목록", description = "프로젝트 PM으로 지정할 수 있는 사용자 목록을 조회합니다.")
+    public ResponseEntity<Page<UserResponse>> getPmCandidates(
+            @PageableDefault(size = 100, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<UserResponse> response = userService.getActiveUsers(pageable);
+        return ResponseEntity.ok(response);
     }
 }
 

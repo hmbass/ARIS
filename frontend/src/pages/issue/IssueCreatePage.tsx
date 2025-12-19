@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Paper, TextField, Button, MenuItem, Alert,
-  useMediaQuery, useTheme,
+  useMediaQuery, useTheme, Autocomplete, CircularProgress,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { createIssue } from '../../api/issue';
-import { getSrs } from '../../api/sr';
-import { getSpecs } from '../../api/spec';
+import { getProjects } from '../../api/project';
+import { getPmCandidates, type PmCandidate } from '../../api/project';
 import type { IssueCreateRequest } from '../../types/issue.types';
-import type { ServiceRequest } from '../../types/sr.types';
-import type { Specification } from '../../types/spec.types';
+import type { Project } from '../../types/project.types';
 
 const IssueCreatePage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,29 +20,39 @@ const IssueCreatePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [srs, setSrs] = useState<ServiceRequest[]>([]);
-  const [specs, setSpecs] = useState<Specification[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<PmCandidate[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedAssignee, setSelectedAssignee] = useState<PmCandidate | null>(null);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
-    fetchSrs();
-    fetchSpecs();
+    fetchProjects();
+    fetchUsers();
   }, []);
 
-  const fetchSrs = async () => {
+  const fetchProjects = async () => {
     try {
-      const response = await getSrs({ page: 0, size: 100 });
-      setSrs(response.content);
+      setLoadingProjects(true);
+      const response = await getProjects({ page: 0, size: 100 });
+      setProjects(response.content);
     } catch (err) {
-      console.error('Failed to fetch SRs:', err);
+      console.error('Failed to fetch projects:', err);
+    } finally {
+      setLoadingProjects(false);
     }
   };
 
-  const fetchSpecs = async () => {
+  const fetchUsers = async () => {
     try {
-      const response = await getSpecs({ page: 0, size: 100 });
-      setSpecs(response.content);
+      setLoadingUsers(true);
+      const response = await getPmCandidates();
+      setUsers(response.content);
     } catch (err) {
-      console.error('Failed to fetch specs:', err);
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -53,12 +62,17 @@ const IssueCreatePage: React.FC = () => {
     setSuccess('');
 
     try {
-      await createIssue(data);
+      const requestData = {
+        ...data,
+        projectId: selectedProject?.id,
+        assigneeId: selectedAssignee?.id,
+      };
+      await createIssue(requestData);
       setSuccess('이슈가 등록되었습니다!');
       setTimeout(() => navigate('/issues'), 2000);
     } catch (err: any) {
       console.error('Failed to create issue:', err);
-      setError(err.message || '이슈 등록에 실패했습니다.');
+      setError(err.response?.data?.message || '이슈 등록에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -93,31 +107,93 @@ const IssueCreatePage: React.FC = () => {
             )}
           />
 
-          <Controller
-            name="srId"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} select label="SR 선택" fullWidth margin="normal" helperText="선택사항">
-                <MenuItem value="">선택 안 함</MenuItem>
-                {srs.map((sr) => (
-                  <MenuItem key={sr.id} value={sr.id}>{sr.srNumber} - {sr.title}</MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2, mt: 2 }}>
+            <Controller
+              name="issueType"
+              control={control}
+              defaultValue="BUG"
+              render={({ field }) => (
+                <TextField {...field} select label="이슈 유형" fullWidth>
+                  <MenuItem value="BUG">버그</MenuItem>
+                  <MenuItem value="IMPROVEMENT">개선</MenuItem>
+                  <MenuItem value="NEW_FEATURE">신규기능</MenuItem>
+                  <MenuItem value="TASK">작업</MenuItem>
+                </TextField>
+              )}
+            />
 
-          <Controller
-            name="specId"
-            control={control}
-            render={({ field }) => (
-              <TextField {...field} select label="SPEC 선택" fullWidth margin="normal" helperText="선택사항">
-                <MenuItem value="">선택 안 함</MenuItem>
-                {specs.map((spec) => (
-                  <MenuItem key={spec.id} value={spec.id}>{spec.specNumber}</MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
+            <Controller
+              name="priority"
+              control={control}
+              defaultValue="MEDIUM"
+              render={({ field }) => (
+                <TextField {...field} select label="우선순위" fullWidth>
+                  <MenuItem value="LOW">낮음</MenuItem>
+                  <MenuItem value="MEDIUM">보통</MenuItem>
+                  <MenuItem value="HIGH">높음</MenuItem>
+                  <MenuItem value="CRITICAL">긴급</MenuItem>
+                </TextField>
+              )}
+            />
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            <Autocomplete
+              options={projects}
+              getOptionLabel={(option) => `${option.code} - ${option.name}`}
+              value={selectedProject}
+              onChange={(_, newValue) => setSelectedProject(newValue)}
+              loading={loadingProjects}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="프로젝트 선택"
+                  placeholder="프로젝트를 검색하세요"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingProjects ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              noOptionsText="검색 결과가 없습니다"
+              loadingText="로딩 중..."
+            />
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            <Autocomplete
+              options={users}
+              getOptionLabel={(option) => `${option.name} (${option.email})${option.position ? ` - ${option.position}` : ''}`}
+              value={selectedAssignee}
+              onChange={(_, newValue) => setSelectedAssignee(newValue)}
+              loading={loadingUsers}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="담당자 선택"
+                  placeholder="담당자를 검색하세요"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingUsers ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              noOptionsText="검색 결과가 없습니다"
+              loadingText="로딩 중..."
+            />
+          </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mt: 3, flexDirection: isMobile ? 'column' : 'row' }}>
             <Button type="button" variant="outlined" onClick={() => navigate('/issues')}
@@ -134,6 +210,3 @@ const IssueCreatePage: React.FC = () => {
 };
 
 export default IssueCreatePage;
-
-
-

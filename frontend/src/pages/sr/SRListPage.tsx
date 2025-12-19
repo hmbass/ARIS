@@ -57,6 +57,7 @@ const SRListPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
       REQUESTED: 'primary',
+      APPROVAL_REQUESTED: 'warning',
       APPROVED: 'primary',
       IN_PROGRESS: 'warning',
       COMPLETED: 'success',
@@ -69,6 +70,7 @@ const SRListPage: React.FC = () => {
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
       REQUESTED: '요청됨',
+      APPROVAL_REQUESTED: '승인요청',
       APPROVED: '승인됨',
       IN_PROGRESS: '진행중',
       COMPLETED: '완료',
@@ -172,10 +174,10 @@ const SRListPage: React.FC = () => {
                     프로젝트: {sr.projectName}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    요청자: {sr.requestorName}
+                    요청자: {sr.requesterName}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    요청일: {new Date(sr.createdAt).toLocaleDateString()}
+                    요청일: {sr.requestDate || new Date(sr.createdAt).toLocaleDateString()}
                   </Typography>
                 </CardContent>
               </Card>
@@ -202,7 +204,7 @@ const SRListPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+                <TableCell>SR번호</TableCell>
                 <TableCell>제목</TableCell>
                 <TableCell>유형</TableCell>
                 <TableCell>프로젝트</TableCell>
@@ -234,7 +236,7 @@ const SRListPage: React.FC = () => {
                     onClick={() => navigate(`/srs/${sr.id}`)}
                     sx={{ cursor: 'pointer' }}
                   >
-                    <TableCell>{sr.id}</TableCell>
+                    <TableCell>{sr.srNumber}</TableCell>
                     <TableCell>{sr.title}</TableCell>
                     <TableCell>
                       <Chip
@@ -244,7 +246,7 @@ const SRListPage: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell>{sr.projectName}</TableCell>
-                    <TableCell>{sr.requestorName}</TableCell>
+                    <TableCell>{sr.requesterName}</TableCell>
                     <TableCell>
                       <Chip
                         label={getStatusLabel(sr.status)}
@@ -259,7 +261,7 @@ const SRListPage: React.FC = () => {
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>{new Date(sr.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{sr.requestDate || new Date(sr.createdAt).toLocaleDateString()}</TableCell>
                   </TableRow>
                 ))
               )}

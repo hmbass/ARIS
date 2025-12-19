@@ -22,18 +22,45 @@ export const createApproval = async (data: ApprovalCreateRequest): Promise<Appro
   return response.data;
 };
 
-// 승인 처리 (승인/반려)
+// 승인 처리
+export const approveApproval = async (
+  id: number,
+  data: { comment?: string }
+): Promise<Approval> => {
+  const response = await apiClient.put<Approval>(`/approvals/${id}/approve`, data);
+  return response.data;
+};
+
+// 반려 처리
+export const rejectApproval = async (
+  id: number,
+  data: { comment?: string }
+): Promise<Approval> => {
+  const response = await apiClient.put<Approval>(`/approvals/${id}/reject`, data);
+  return response.data;
+};
+
+// 승인 처리 (통합 - 상태에 따라 분기)
 export const processApproval = async (
   id: number,
   data: ApprovalActionRequest
 ): Promise<Approval> => {
-  const response = await apiClient.put<Approval>(`/approvals/${id}/process`, data);
-  return response.data;
+  if (data.status === 'APPROVED') {
+    return approveApproval(id, { comment: data.comment });
+  } else {
+    return rejectApproval(id, { comment: data.comment });
+  }
 };
 
 // 승인 취소
+export const cancelApproval = async (id: number): Promise<Approval> => {
+  const response = await apiClient.put<Approval>(`/approvals/${id}/cancel`);
+  return response.data;
+};
+
+// 승인 삭제 (취소로 대체)
 export const deleteApproval = async (id: number): Promise<void> => {
-  await apiClient.delete(`/approvals/${id}`);
+  await cancelApproval(id);
 };
 
 

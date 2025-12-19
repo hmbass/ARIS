@@ -4,7 +4,9 @@ import com.aris.domain.issue.dto.IssueRequest;
 import com.aris.domain.issue.dto.IssueResponse;
 import com.aris.domain.issue.entity.Issue;
 import com.aris.domain.issue.entity.IssueStatus;
+import com.aris.domain.issue.entity.IssueType;
 import com.aris.domain.issue.repository.IssueRepository;
+import com.aris.domain.project.repository.ProjectRepository;
 import com.aris.domain.spec.repository.SpecificationRepository;
 import com.aris.domain.sr.repository.ServiceRequestRepository;
 import com.aris.domain.user.entity.User;
@@ -34,6 +36,7 @@ public class IssueService {
     private final UserRepository userRepository;
     private final ServiceRequestRepository serviceRequestRepository;
     private final SpecificationRepository specificationRepository;
+    private final ProjectRepository projectRepository;
     private final NumberingService numberingService;
     
     /**
@@ -58,7 +61,16 @@ public class IssueService {
                 .issueNumber(issueNumber)
                 .title(request.title())
                 .content(request.content())
+                .issueType(request.issueType() != null ? request.issueType() : IssueType.BUG)
+                .priority(request.priority() != null ? request.priority() : "MEDIUM")
                 .reporter(reporter);
+        
+        // 프로젝트 연결
+        if (request.projectId() != null) {
+            var project = projectRepository.findById(request.projectId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
+            issueBuilder.project(project);
+        }
         
         // SR 연결
         if (request.srId() != null) {
@@ -137,6 +149,14 @@ public class IssueService {
         
         issue.updateIssue(request.title(), request.content(), assignee);
         
+        // issueType, priority 업데이트
+        if (request.issueType() != null) {
+            issue.updateIssueType(request.issueType());
+        }
+        if (request.priority() != null) {
+            issue.updatePriority(request.priority());
+        }
+        
         log.info("이슈 수정 완료: {}", issue.getIssueNumber());
         return IssueResponse.from(issue);
     }
@@ -195,8 +215,3 @@ public class IssueService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }
-
-
-
-
-

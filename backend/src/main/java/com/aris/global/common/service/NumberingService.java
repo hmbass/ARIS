@@ -39,9 +39,20 @@ public class NumberingService {
     public synchronized String generateSrNumber(LocalDate requestDate) {
         int year = requestDate.getYear() % 100;
         int month = requestDate.getMonthValue();
+        String prefix = String.format("SR%02d%02d-", year, month);
         
-        Long count = serviceRequestRepository.countByYearAndMonth(requestDate.getYear(), month);
-        long sequence = (count != null ? count : 0) + 1;
+        String maxNumber = serviceRequestRepository.findMaxSrNumberByPrefix(prefix);
+        long sequence = 1;
+        
+        if (maxNumber != null && maxNumber.length() > prefix.length()) {
+            try {
+                sequence = Long.parseLong(maxNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                // 파싱 실패 시 기존 count 방식 사용
+                Long count = serviceRequestRepository.countByYearAndMonth(requestDate.getYear(), month);
+                sequence = (count != null ? count : 0) + 1;
+            }
+        }
         
         return String.format("SR%02d%02d-%04d", year, month, sequence);
     }
@@ -54,9 +65,19 @@ public class NumberingService {
         LocalDateTime now = LocalDateTime.now();
         int year = now.getYear() % 100;
         int month = now.getMonthValue();
+        String prefix = String.format("SPEC%02d%02d-", year, month);
         
-        Long count = specificationRepository.countByYearAndMonth(now.getYear(), month);
-        long sequence = (count != null ? count : 0) + 1;
+        String maxNumber = specificationRepository.findMaxSpecNumberByPrefix(prefix);
+        long sequence = 1;
+        
+        if (maxNumber != null && maxNumber.length() > prefix.length()) {
+            try {
+                sequence = Long.parseLong(maxNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                Long count = specificationRepository.countByYearAndMonth(now.getYear(), month);
+                sequence = (count != null ? count : 0) + 1;
+            }
+        }
         
         return String.format("SPEC%02d%02d-%04d", year, month, sequence);
     }
@@ -69,9 +90,19 @@ public class NumberingService {
         LocalDateTime now = LocalDateTime.now();
         int year = now.getYear() % 100;
         int month = now.getMonthValue();
+        String prefix = String.format("APP%02d%02d-", year, month);
         
-        Long count = approvalRepository.countByYearAndMonth(now.getYear(), month);
-        long sequence = (count != null ? count : 0) + 1;
+        String maxNumber = approvalRepository.findMaxApprovalNumberByPrefix(prefix);
+        long sequence = 1;
+        
+        if (maxNumber != null && maxNumber.length() > prefix.length()) {
+            try {
+                sequence = Long.parseLong(maxNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                Long count = approvalRepository.countByYearAndMonth(now.getYear(), month);
+                sequence = (count != null ? count : 0) + 1;
+            }
+        }
         
         return String.format("APP%02d%02d-%04d", year, month, sequence);
     }
@@ -84,9 +115,19 @@ public class NumberingService {
         LocalDateTime now = LocalDateTime.now();
         int year = now.getYear() % 100;
         int month = now.getMonthValue();
+        String prefix = String.format("ISS%02d%02d-", year, month);
         
-        Long count = issueRepository.countByYearAndMonth(now.getYear(), month);
-        long sequence = (count != null ? count : 0) + 1;
+        String maxNumber = issueRepository.findMaxIssueNumberByPrefix(prefix);
+        long sequence = 1;
+        
+        if (maxNumber != null && maxNumber.length() > prefix.length()) {
+            try {
+                sequence = Long.parseLong(maxNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                Long count = issueRepository.countByYearAndMonth(now.getYear(), month);
+                sequence = (count != null ? count : 0) + 1;
+            }
+        }
         
         return String.format("ISS%02d%02d-%04d", year, month, sequence);
     }
@@ -99,9 +140,19 @@ public class NumberingService {
         LocalDateTime now = LocalDateTime.now();
         int year = now.getYear() % 100;
         int month = now.getMonthValue();
+        String prefix = String.format("REL%02d%02d-", year, month);
         
-        Long count = releaseRepository.countByYearAndMonth(now.getYear(), month);
-        long sequence = (count != null ? count : 0) + 1;
+        String maxNumber = releaseRepository.findMaxReleaseNumberByPrefix(prefix);
+        long sequence = 1;
+        
+        if (maxNumber != null && maxNumber.length() > prefix.length()) {
+            try {
+                sequence = Long.parseLong(maxNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                Long count = releaseRepository.countByYearAndMonth(now.getYear(), month);
+                sequence = (count != null ? count : 0) + 1;
+            }
+        }
         
         return String.format("REL%02d%02d-%04d", year, month, sequence);
     }
@@ -114,9 +165,19 @@ public class NumberingService {
         LocalDateTime now = LocalDateTime.now();
         int year = now.getYear() % 100;
         int month = now.getMonthValue();
+        String prefix = String.format("INC%02d%02d-", year, month);
         
-        Long count = incidentRepository.countByYearAndMonth(now.getYear(), month);
-        long sequence = (count != null ? count : 0) + 1;
+        String maxNumber = incidentRepository.findMaxIncidentNumberByPrefix(prefix);
+        long sequence = 1;
+        
+        if (maxNumber != null && maxNumber.length() > prefix.length()) {
+            try {
+                sequence = Long.parseLong(maxNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                Long count = incidentRepository.countByYearAndMonth(now.getYear(), month);
+                sequence = (count != null ? count : 0) + 1;
+            }
+        }
         
         return String.format("INC%02d%02d-%04d", year, month, sequence);
     }

@@ -26,6 +26,16 @@ export const deleteAsset = async (id: number): Promise<void> => {
   await apiClient.delete(`/assets/${id}`);
 };
 
+export const expireAsset = async (id: number): Promise<Asset> => {
+  const response = await apiClient.post<Asset>(`/assets/${id}/expire`);
+  return response.data;
+};
+
+export const restoreAsset = async (id: number): Promise<Asset> => {
+  const response = await apiClient.post<Asset>(`/assets/${id}/restore`);
+  return response.data;
+};
+
 
 
 

@@ -3,7 +3,7 @@ import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableConta
 import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { getAssets } from '../../api/asset';
-import type { Asset } from '../../types/asset.types';
+import type { Asset, AssetType } from '../../types/asset.types';
 
 const AssetListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,8 +30,18 @@ const AssetListPage: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  const getStatusColor = (status: string) => ({ IN_USE: 'success', AVAILABLE: 'primary', MAINTENANCE: 'warning', RETIRED: 'default' } as any)[status] || 'default';
-  const getStatusLabel = (status: string) => ({ IN_USE: '사용중', AVAILABLE: '사용가능', MAINTENANCE: '유지보수', RETIRED: '폐기' } as any)[status] || status;
+  const getTypeLabel = (type: AssetType) => {
+    const labels: Record<AssetType, string> = {
+      PC: '데스크톱',
+      LAPTOP: '노트북',
+      MONITOR: '모니터',
+      SERVER: '서버',
+      NETWORK: '네트워크',
+      PRINTER: '프린터',
+      OTHER: '기타',
+    };
+    return labels[type] || type;
+  };
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
@@ -46,11 +56,11 @@ const AssetListPage: React.FC = () => {
             <Card key={asset.id} sx={{ cursor: 'pointer', width: '100%' }} onClick={() => navigate(`/assets/${asset.id}`)}>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                  <Typography variant="h6" component="div" sx={{ flex: 1, mr: 1 }}>{asset.name}</Typography>
-                  <Chip label={getStatusLabel(asset.status)} color={getStatusColor(asset.status)} size="small" />
+                  <Typography variant="h6" component="div" sx={{ flex: 1, mr: 1 }}>{asset.assetNumber}</Typography>
+                  <Chip label={asset.isExpired ? '폐기' : '사용중'} color={asset.isExpired ? 'default' : 'success'} size="small" />
                 </Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>유형: {asset.assetType}</Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>모델: {asset.model || '-'}</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>유형: {getTypeLabel(asset.assetType)}</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>시리얼: {asset.serialNumber || '-'}</Typography>
                 <Typography variant="body2" color="text.secondary">담당자: {asset.managerName || '-'}</Typography>
               </CardContent>
             </Card>
@@ -61,14 +71,16 @@ const AssetListPage: React.FC = () => {
         </Box>
       ) : (
         <TableContainer component={Paper} sx={{ width: '100%' }}>
-          <Table><TableHead><TableRow><TableCell>ID</TableCell><TableCell>자산명</TableCell><TableCell>유형</TableCell><TableCell>모델</TableCell><TableCell>위치</TableCell><TableCell>담당자</TableCell><TableCell>상태</TableCell></TableRow></TableHead>
+          <Table><TableHead><TableRow><TableCell>자산번호</TableCell><TableCell>유형</TableCell><TableCell>시리얼번호</TableCell><TableCell>취득일</TableCell><TableCell>담당자</TableCell><TableCell>상태</TableCell></TableRow></TableHead>
             <TableBody>
-              {loading ? <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={24} /><Typography sx={{ mt: 1 }}>로딩 중...</Typography></TableCell></TableRow> : assets.length === 0 ? <TableRow><TableCell colSpan={7} align="center"><Typography>데이터가 없습니다.</Typography></TableCell></TableRow> : assets.map((asset) => (
+              {loading ? <TableRow><TableCell colSpan={6} align="center"><CircularProgress size={24} /><Typography sx={{ mt: 1 }}>로딩 중...</Typography></TableCell></TableRow> : assets.length === 0 ? <TableRow><TableCell colSpan={6} align="center"><Typography>데이터가 없습니다.</Typography></TableCell></TableRow> : assets.map((asset) => (
                 <TableRow key={asset.id} hover onClick={() => navigate(`/assets/${asset.id}`)} sx={{ cursor: 'pointer' }}>
-                  <TableCell>{asset.id}</TableCell><TableCell>{asset.name}</TableCell>
-                  <TableCell>{asset.assetType}</TableCell><TableCell>{asset.model || '-'}</TableCell>
-                  <TableCell>{asset.location || '-'}</TableCell><TableCell>{asset.managerName || '-'}</TableCell>
-                  <TableCell><Chip label={getStatusLabel(asset.status)} color={getStatusColor(asset.status)} size="small" /></TableCell>
+                  <TableCell>{asset.assetNumber}</TableCell>
+                  <TableCell>{getTypeLabel(asset.assetType)}</TableCell>
+                  <TableCell>{asset.serialNumber || '-'}</TableCell>
+                  <TableCell>{asset.acquiredAt}</TableCell>
+                  <TableCell>{asset.managerName || '-'}</TableCell>
+                  <TableCell><Chip label={asset.isExpired ? '폐기' : '사용중'} color={asset.isExpired ? 'default' : 'success'} size="small" /></TableCell>
                 </TableRow>
               ))}
             </TableBody>

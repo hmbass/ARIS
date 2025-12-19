@@ -1,51 +1,62 @@
 // SR 관련 타입 정의
 
+export type SrType = 'DEVELOPMENT' | 'OPERATION';
+export type SrCategory = 'NEW' | 'CHANGE' | 'DELETE' | 'ETC';
+export type SrStatus = 'REQUESTED' | 'APPROVAL_REQUESTED' | 'APPROVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
+export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
 export interface ServiceRequest {
   id: number;
   srNumber: string;
   title: string;
-  description: string;
-  srType: 'DEVELOPMENT' | 'OPERATION';
-  status: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  requestorId: number;
-  requestorName: string;
-  projectId: number;
+  srType: SrType;
+  srCategory?: SrCategory;
+  status: SrStatus;
+  businessRequirement: string;
   projectName: string;
-  expectedDate?: string;
-  completedDate?: string;
-  estimatedManday?: number;
-  actualManday?: number;
+  requesterName: string;
+  requesterDeptName?: string;
+  requestDate?: string;
+  dueDate?: string;
+  priority: Priority;
+  releaseDate?: string;
+  releaseNumber?: string;
+  specId?: number;
+  specNumber?: string;
   createdAt: string;
+  createdBy: string;
   updatedAt: string;
 }
 
 export interface SrCreateRequest {
   title: string;
-  description: string;
-  srType: 'DEVELOPMENT' | 'OPERATION';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  businessRequirement: string;
+  srType: SrType;
+  srCategory?: SrCategory;
+  priority: Priority;
   projectId: number;
-  expectedDate?: string;
-  estimatedManday?: number;
+  requesterDeptId?: number;
+  requestDate?: string;
+  dueDate?: string;
 }
 
 export interface SrUpdateRequest {
-  title?: string;
-  description?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  expectedDate?: string;
-  estimatedManday?: number;
+  title: string;
+  businessRequirement: string;
+  dueDate?: string;
+  priority?: Priority;
 }
 
 export interface SrListParams {
   page?: number;
   size?: number;
-  srType?: 'DEVELOPMENT' | 'OPERATION';
-  status?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  title?: string;
+  srType?: SrType;
+  status?: SrStatus;
   projectId?: number;
-  requestorId?: number;
+  requesterId?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 

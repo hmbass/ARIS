@@ -25,9 +25,11 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
     
     @Query("SELECT COUNT(i) FROM Incident i " +
            "WHERE EXTRACT(YEAR FROM i.createdAt) = :year " +
-           "AND EXTRACT(MONTH FROM i.createdAt) = :month " +
-           "AND i.deletedAt IS NULL")
+           "AND EXTRACT(MONTH FROM i.createdAt) = :month")
     Long countByYearAndMonth(@Param("year") int year, @Param("month") int month);
+    
+    @Query("SELECT MAX(i.incidentNumber) FROM Incident i WHERE i.incidentNumber LIKE :prefix%")
+    String findMaxIncidentNumberByPrefix(@Param("prefix") String prefix);
     
     @Query("SELECT i FROM Incident i " +
            "WHERE (:title IS NULL OR i.title LIKE %:title%) " +

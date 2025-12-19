@@ -1,22 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, TextField, Button, MenuItem, Alert,
-  useMediaQuery, useTheme,
+  useMediaQuery, useTheme, Autocomplete, CircularProgress,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { createAsset } from '../../api/asset';
+import { getActiveUsersSimple } from '../../api/user';
+import type { UserSimple } from '../../api/user';
 import type { AssetCreateRequest } from '../../types/asset.types';
 
 const AssetCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { control, handleSubmit, formState: { errors } } = useForm<AssetCreateRequest>();
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm<AssetCreateRequest>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [users, setUsers] = useState<UserSimple[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await getActiveUsersSimple({ size: 1000 });
+      setUsers(response.content);
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   const onSubmit = async (data: AssetCreateRequest) => {
     setLoading(true);
@@ -29,7 +49,7 @@ const AssetCreatePage: React.FC = () => {
       setTimeout(() => navigate('/assets'), 2000);
     } catch (err: any) {
       console.error('Failed to create asset:', err);
-      setError(err.message || '자산 등록에 실패했습니다.');
+      setError(err.response?.data?.message || err.message || '자산 등록에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -56,6 +76,8 @@ const AssetCreatePage: React.FC = () => {
                 <MenuItem value="MONITOR">모니터</MenuItem>
                 <MenuItem value="SERVER">서버</MenuItem>
                 <MenuItem value="NETWORK">네트워크 장비</MenuItem>
+                <MenuItem value="PRINTER">프린터</MenuItem>
+                <MenuItem value="OTHER">기타</MenuItem>
               </TextField>
             )}
           />
@@ -74,6 +96,31 @@ const AssetCreatePage: React.FC = () => {
             render={({ field }) => (
               <TextField {...field} label="취득일" type="date" fullWidth margin="normal"
                 InputLabelProps={{ shrink: true }} helperText="선택사항 (미입력 시 오늘 날짜)" />
+            )}
+          />
+
+          <Autocomplete
+            options={users}
+            getOptionLabel={(option) => `${option.name} (${option.email})`}
+            loading={usersLoading}
+            onChange={(_, value) => setValue('managerId', value?.id)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="담당자"
+                fullWidth
+                margin="normal"
+                helperText="선택사항"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {usersLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
             )}
           />
 

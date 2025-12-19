@@ -44,11 +44,11 @@ const PartnerListPage: React.FC = () => {
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
                   <Typography variant="h6" component="div" sx={{ flex: 1, mr: 1 }}>{partner.name}</Typography>
-                  <Chip label={partner.isActive ? '활성' : '비활성'} color={partner.isActive ? 'success' : 'default'} size="small" />
+                  <Chip label={partner.isClosed ? '폐업' : '운영중'} color={partner.isClosed ? 'error' : 'success'} size="small" />
                 </Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>코드: {partner.code}</Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>사업자번호: {partner.businessNumber}</Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>대표: {partner.ceoName || '-'}</Typography>
-                <Typography variant="body2" color="text.secondary">담당자: {partner.managerName || '-'}</Typography>
+                <Typography variant="body2" color="text.secondary">대표: {partner.ceoName || '-'}</Typography>
               </CardContent>
             </Card>
           ))}
@@ -58,14 +58,14 @@ const PartnerListPage: React.FC = () => {
         </Box>
       ) : (
         <TableContainer component={Paper} sx={{ width: '100%' }}>
-          <Table><TableHead><TableRow><TableCell>ID</TableCell><TableCell>파트너명</TableCell><TableCell>사업자번호</TableCell><TableCell>대표</TableCell><TableCell>연락처</TableCell><TableCell>담당자</TableCell><TableCell>상태</TableCell></TableRow></TableHead>
+          <Table><TableHead><TableRow><TableCell>코드</TableCell><TableCell>파트너명</TableCell><TableCell>사업자번호</TableCell><TableCell>대표자명</TableCell><TableCell>내부 담당자</TableCell><TableCell>상태</TableCell></TableRow></TableHead>
             <TableBody>
-              {loading ? <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={24} /><Typography sx={{ mt: 1 }}>로딩 중...</Typography></TableCell></TableRow> : partners.length === 0 ? <TableRow><TableCell colSpan={7} align="center"><Typography>데이터가 없습니다.</Typography></TableCell></TableRow> : partners.map((partner) => (
+              {loading ? <TableRow><TableCell colSpan={6} align="center"><CircularProgress size={24} /><Typography sx={{ mt: 1 }}>로딩 중...</Typography></TableCell></TableRow> : partners.length === 0 ? <TableRow><TableCell colSpan={6} align="center"><Typography>데이터가 없습니다.</Typography></TableCell></TableRow> : partners.map((partner) => (
                 <TableRow key={partner.id} hover onClick={() => navigate(`/partners/${partner.id}`)} sx={{ cursor: 'pointer' }}>
-                  <TableCell>{partner.id}</TableCell><TableCell>{partner.name}</TableCell>
+                  <TableCell>{partner.code}</TableCell><TableCell>{partner.name}</TableCell>
                   <TableCell>{partner.businessNumber}</TableCell><TableCell>{partner.ceoName || '-'}</TableCell>
-                  <TableCell>{partner.phoneNumber || '-'}</TableCell><TableCell>{partner.managerName || '-'}</TableCell>
-                  <TableCell><Chip label={partner.isActive ? '활성' : '비활성'} color={partner.isActive ? 'success' : 'default'} size="small" /></TableCell>
+                  <TableCell>{partner.managerName || '-'}</TableCell>
+                  <TableCell><Chip label={partner.isClosed ? '폐업' : '운영중'} color={partner.isClosed ? 'error' : 'success'} size="small" /></TableCell>
                 </TableRow>
               ))}
             </TableBody>

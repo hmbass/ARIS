@@ -1,7 +1,7 @@
 package com.aris.domain.issue.dto;
 
+import com.aris.domain.issue.entity.IssueType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
@@ -14,12 +14,18 @@ public record IssueRequest(
         
         Long specId,
         
+        Long projectId,
+        
         @NotBlank(message = "이슈 제목은 필수입니다.")
         @Size(max = 200, message = "이슈 제목은 200자를 초과할 수 없습니다.")
         String title,
         
         @NotBlank(message = "이슈 내용은 필수입니다.")
         String content,
+        
+        IssueType issueType,
+        
+        String priority,
         
         Long assigneeId,
         
@@ -28,8 +34,3 @@ public record IssueRequest(
         
         Long parentIssueId
 ) {}
-
-
-
-
-

@@ -24,9 +24,11 @@ export interface UserCreateRequest {
   name: string;
   phoneNumber?: string;
   companyId?: number;
+  companyName?: string;  // 직접 입력용 회사명
   departmentId?: number;
   employeeNumber?: string;
   position?: string;
+  roleNames?: string[];  // 역할명 목록
 }
 
 export interface UserUpdateRequest {
@@ -34,6 +36,8 @@ export interface UserUpdateRequest {
   phoneNumber?: string;
   position?: string;
   departmentId?: number;
+  employeeNumber?: string;
+  roleNames?: string[];  // 역할명 목록
 }
 
 export interface PasswordResetRequest {
@@ -115,6 +119,27 @@ export const getMyProfile = async (): Promise<User> => {
  */
 export const updateMyProfile = async (data: UserUpdateRequest): Promise<User> => {
   const response = await apiClient.put('/profile', data);
+  return response.data;
+};
+
+/**
+ * 간소화된 사용자 정보 (담당자 선택용)
+ */
+export interface UserSimple {
+  id: number;
+  name: string;
+  email: string;
+  departmentName?: string;
+}
+
+/**
+ * 활성화된 사용자 간소화 목록 조회 (담당자 선택용)
+ */
+export const getActiveUsersSimple = async (params: { page?: number; size?: number } = {}): Promise<PageResponse<UserSimple>> => {
+  const { page = 0, size = 100 } = params;
+  const response = await apiClient.get('/users-simple', {
+    params: { page, size },
+  });
   return response.data;
 };
 

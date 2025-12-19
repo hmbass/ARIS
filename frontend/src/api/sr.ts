@@ -42,6 +42,12 @@ export const updateSrStatus = async (
   return response.data;
 };
 
+// 승인 요청 가능한 SR 목록 조회
+export const getApprovableSrs = async (): Promise<ServiceRequest[]> => {
+  const response = await apiClient.get<ServiceRequest[]>('/srs/approvable');
+  return response.data;
+};
+
 
 
 

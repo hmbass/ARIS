@@ -42,6 +42,12 @@ export const updateSpecStatus = async (
   return response.data;
 };
 
+// 승인 요청 가능한 SPEC 목록 조회
+export const getApprovableSpecs = async (): Promise<Specification[]> => {
+  const response = await apiClient.get<Specification[]>('/specs/approvable');
+  return response.data;
+};
+
 
 
 

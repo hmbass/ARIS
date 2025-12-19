@@ -1,39 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box, Typography, TextField, Button, Paper, CircularProgress, Alert,
-  useMediaQuery, useTheme, MenuItem,
+  useMediaQuery, useTheme, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { createUser, type UserCreateRequest } from '../../api/user';
-import { getCompanies } from '../../api/project';
-import type { Company } from '../../types/project.types';
+import { createUser } from '../../api/user';
+import type { UserCreateRequest } from '../../api/user';
+
+// 선택 가능한 역할 정의
+const AVAILABLE_ROLES = [
+  { name: 'ROLE_USER', label: '일반 사용자', description: '기본 사용자 권한' },
+  { name: 'ROLE_SYSTEM_ADMIN', label: '시스템 관리자', description: '사용자 관리 가능' },
+];
 
 const UserCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { control, handleSubmit, formState: { errors } } = useForm<UserCreateRequest>();
+  const { control, handleSubmit, formState: { errors } } = useForm<UserCreateRequest>({
+    defaultValues: {
+      roleNames: ['ROLE_USER'],  // 기본적으로 일반 사용자 권한 선택
+    },
+  });
   const [loading, setLoading] = useState(false);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(['ROLE_USER']);
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
-    setLoadingCompanies(true);
-    try {
-      const response = await getCompanies();
-      setCompanies(response);
-    } catch (err: any) {
-      console.error('Failed to fetch companies:', err);
-    } finally {
-      setLoadingCompanies(false);
+  const handleRoleChange = (roleName: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRoles(prev => [...prev, roleName]);
+    } else {
+      // 최소 하나의 역할은 선택되어야 함
+      if (selectedRoles.length > 1) {
+        setSelectedRoles(prev => prev.filter(r => r !== roleName));
+      }
     }
   };
 
@@ -42,14 +45,19 @@ const UserCreatePage: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      await createUser(data);
+      // 선택된 역할 추가
+      const requestData = {
+        ...data,
+        roleNames: selectedRoles,
+      };
+      await createUser(requestData);
       setSuccess('사용자가 성공적으로 등록되었습니다.');
       setTimeout(() => {
         navigate('/users');
       }, 2000);
     } catch (err: any) {
       console.error('Failed to create user:', err);
-      setError(err.message || '사용자 등록에 실패했습니다.');
+      setError(err.response?.data?.message || err.message || '사용자 등록에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -170,34 +178,23 @@ const UserCreatePage: React.FC = () => {
           />
 
           <Controller
-            name="companyId"
+            name="companyName"
             control={control}
+            rules={{
+              maxLength: {
+                value: 100,
+                message: '회사명은 최대 100자까지 가능합니다.',
+              },
+            }}
             render={({ field }) => (
               <TextField
                 {...field}
-                select
-                label="회사"
+                label="회사명"
                 fullWidth
                 margin="normal"
-                error={!!errors.companyId}
-                helperText={errors.companyId?.message}
-                disabled={loadingCompanies}
-              >
-                <MenuItem value="">
-                  <em>선택 안함</em>
-                </MenuItem>
-                {loadingCompanies ? (
-                  <MenuItem disabled>
-                    <CircularProgress size={20} /> 로딩 중...
-                  </MenuItem>
-                ) : (
-                  companies.map((company) => (
-                    <MenuItem key={company.id} value={company.id}>
-                      {company.name}
-                    </MenuItem>
-                  ))
-                )}
-              </TextField>
+                error={!!errors.companyName}
+                helperText={errors.companyName?.message || '회사명을 직접 입력하세요. 기존에 없는 회사명이면 자동으로 생성됩니다.'}
+              />
             )}
           />
 
@@ -243,6 +240,38 @@ const UserCreatePage: React.FC = () => {
             )}
           />
 
+          {/* 권한 선택 */}
+          <FormControl component="fieldset" sx={{ mt: 3, width: '100%' }}>
+            <FormLabel component="legend" sx={{ mb: 1, fontWeight: 600 }}>
+              권한 설정
+            </FormLabel>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <FormGroup>
+                {AVAILABLE_ROLES.map((role) => (
+                  <FormControlLabel
+                    key={role.name}
+                    control={
+                      <Checkbox
+                        checked={selectedRoles.includes(role.name)}
+                        onChange={(e) => handleRoleChange(role.name, e.target.checked)}
+                        disabled={selectedRoles.length === 1 && selectedRoles.includes(role.name)}
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body1">{role.label}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {role.description}
+                        </Typography>
+                      </Box>
+                    }
+                    sx={{ mb: 1, alignItems: 'flex-start' }}
+                  />
+                ))}
+              </FormGroup>
+            </Paper>
+          </FormControl>
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
             <Button
               variant="outlined"
@@ -269,6 +298,3 @@ const UserCreatePage: React.FC = () => {
 };
 
 export default UserCreatePage;
-
-
-

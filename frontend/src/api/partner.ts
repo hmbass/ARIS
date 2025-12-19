@@ -26,6 +26,16 @@ export const deletePartner = async (id: number): Promise<void> => {
   await apiClient.delete(`/partners/${id}`);
 };
 
+export const closePartner = async (id: number): Promise<Partner> => {
+  const response = await apiClient.post<Partner>(`/partners/${id}/close`);
+  return response.data;
+};
+
+export const reopenPartner = async (id: number): Promise<Partner> => {
+  const response = await apiClient.post<Partner>(`/partners/${id}/reopen`);
+  return response.data;
+};
+
 
 
 

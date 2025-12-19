@@ -103,6 +103,13 @@ public class ApprovalController {
         ApprovalResponse response = approvalService.cancelApproval(id);
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/count/pending")
+    @Operation(summary = "승인 대기 개수 조회", description = "사용자 권한에 따른 승인 대기 개수를 조회합니다.")
+    public ResponseEntity<Long> countPendingApprovals() {
+        long count = approvalService.countMyPendingApprovals();
+        return ResponseEntity.ok(count);
+    }
 }
 
 

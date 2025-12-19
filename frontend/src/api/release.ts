@@ -26,6 +26,26 @@ export const deleteRelease = async (id: number): Promise<void> => {
   await apiClient.delete(`/releases/${id}`);
 };
 
+export const approveRelease = async (id: number): Promise<Release> => {
+  const response = await apiClient.post<Release>(`/releases/${id}/approve`);
+  return response.data;
+};
+
+export const deployRelease = async (id: number): Promise<Release> => {
+  const response = await apiClient.post<Release>(`/releases/${id}/deploy`);
+  return response.data;
+};
+
+export const cancelRelease = async (id: number): Promise<Release> => {
+  const response = await apiClient.post<Release>(`/releases/${id}/cancel`);
+  return response.data;
+};
+
+export const getApprovableReleases = async (): Promise<Release[]> => {
+  const response = await apiClient.get<Release[]>('/releases/approvable');
+  return response.data;
+};
+
 
 
 

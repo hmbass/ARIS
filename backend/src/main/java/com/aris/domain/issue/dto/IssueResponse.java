@@ -2,6 +2,7 @@ package com.aris.domain.issue.dto;
 
 import com.aris.domain.issue.entity.Issue;
 import com.aris.domain.issue.entity.IssueStatus;
+import com.aris.domain.issue.entity.IssueType;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -17,8 +18,12 @@ public record IssueResponse(
         String srNumber,
         Long specId,
         String specNumber,
+        Long projectId,
+        String projectName,
         String title,
         String content,
+        IssueType issueType,
+        String priority,
         IssueStatus status,
         Long assigneeId,
         String assigneeName,
@@ -39,8 +44,12 @@ public record IssueResponse(
                 .srNumber(issue.getServiceRequest() != null ? issue.getServiceRequest().getSrNumber() : null)
                 .specId(issue.getSpecification() != null ? issue.getSpecification().getId() : null)
                 .specNumber(issue.getSpecification() != null ? issue.getSpecification().getSpecNumber() : null)
+                .projectId(issue.getProject() != null ? issue.getProject().getId() : null)
+                .projectName(issue.getProject() != null ? issue.getProject().getName() : null)
                 .title(issue.getTitle())
                 .content(issue.getContent())
+                .issueType(issue.getIssueType())
+                .priority(issue.getPriority())
                 .status(issue.getStatus())
                 .assigneeId(issue.getAssignee() != null ? issue.getAssignee().getId() : null)
                 .assigneeName(issue.getAssignee() != null ? issue.getAssignee().getName() : null)
@@ -55,12 +64,3 @@ public record IssueResponse(
                 .build();
     }
 }
-
-
-
-
-
-
-
-
-

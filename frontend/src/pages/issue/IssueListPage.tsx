@@ -32,7 +32,9 @@ const IssueListPage: React.FC = () => {
 
   const getStatusColor = (status: string) => ({ OPEN: 'error', IN_PROGRESS: 'warning', RESOLVED: 'success', CLOSED: 'default' } as any)[status] || 'default';
   const getStatusLabel = (status: string) => ({ OPEN: '열림', IN_PROGRESS: '진행중', RESOLVED: '해결됨', CLOSED: '닫힘' } as any)[status] || status;
-  const getPriorityColor = (priority: string) => ({ LOW: 'default', MEDIUM: 'primary', HIGH: 'warning', CRITICAL: 'error' } as any)[priority] || 'default';
+  const getPriorityColor = (priority?: string) => ({ LOW: 'default', MEDIUM: 'primary', HIGH: 'warning', CRITICAL: 'error' } as any)[priority || ''] || 'default';
+  const getPriorityLabel = (priority?: string) => ({ LOW: '낮음', MEDIUM: '보통', HIGH: '높음', CRITICAL: '긴급' } as any)[priority || ''] || priority || '-';
+  const getIssueTypeLabel = (issueType?: string) => ({ BUG: '버그', IMPROVEMENT: '개선', NEW_FEATURE: '신규기능', TASK: '작업' } as any)[issueType || ''] || issueType || '-';
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
@@ -50,9 +52,10 @@ const IssueListPage: React.FC = () => {
                   <Typography variant="h6" component="div" sx={{ flex: 1, mr: 1 }}>{issue.title}</Typography>
                   <Chip label={getStatusLabel(issue.status)} color={getStatusColor(issue.status)} size="small" />
                 </Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>프로젝트: {issue.projectName}</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>유형: {getIssueTypeLabel(issue.issueType)}</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>프로젝트: {issue.projectName || '-'}</Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>담당자: {issue.assigneeName || '-'}</Typography>
-                <Typography variant="body2" color="text.secondary">우선순위: {issue.priority}</Typography>
+                <Typography variant="body2" color="text.secondary">우선순위: {getPriorityLabel(issue.priority)}</Typography>
               </CardContent>
             </Card>
           ))}
@@ -62,14 +65,17 @@ const IssueListPage: React.FC = () => {
         </Box>
       ) : (
         <TableContainer component={Paper} sx={{ width: '100%' }}>
-          <Table><TableHead><TableRow><TableCell>ID</TableCell><TableCell>제목</TableCell><TableCell>유형</TableCell><TableCell>우선순위</TableCell><TableCell>상태</TableCell><TableCell>프로젝트</TableCell><TableCell>담당자</TableCell></TableRow></TableHead>
+          <Table><TableHead><TableRow><TableCell>이슈번호</TableCell><TableCell>제목</TableCell><TableCell>유형</TableCell><TableCell>우선순위</TableCell><TableCell>상태</TableCell><TableCell>프로젝트</TableCell><TableCell>담당자</TableCell></TableRow></TableHead>
             <TableBody>
               {loading ? <TableRow><TableCell colSpan={7} align="center"><CircularProgress size={24} /><Typography sx={{ mt: 1 }}>로딩 중...</Typography></TableCell></TableRow> : issues.length === 0 ? <TableRow><TableCell colSpan={7} align="center"><Typography>데이터가 없습니다.</Typography></TableCell></TableRow> : issues.map((issue) => (
                 <TableRow key={issue.id} hover onClick={() => navigate(`/issues/${issue.id}`)} sx={{ cursor: 'pointer' }}>
-                  <TableCell>{issue.id}</TableCell><TableCell>{issue.title}</TableCell><TableCell>{issue.issueType}</TableCell>
-                  <TableCell><Chip label={issue.priority} color={getPriorityColor(issue.priority)} size="small" /></TableCell>
+                  <TableCell>{issue.issueNumber}</TableCell>
+                  <TableCell>{issue.title}</TableCell>
+                  <TableCell>{getIssueTypeLabel(issue.issueType)}</TableCell>
+                  <TableCell><Chip label={getPriorityLabel(issue.priority)} color={getPriorityColor(issue.priority)} size="small" /></TableCell>
                   <TableCell><Chip label={getStatusLabel(issue.status)} color={getStatusColor(issue.status)} size="small" /></TableCell>
-                  <TableCell>{issue.projectName}</TableCell><TableCell>{issue.assigneeName || '-'}</TableCell>
+                  <TableCell>{issue.projectName || '-'}</TableCell>
+                  <TableCell>{issue.assigneeName || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -82,10 +88,3 @@ const IssueListPage: React.FC = () => {
 };
 
 export default IssueListPage;
-
-
-
-
-
-
-

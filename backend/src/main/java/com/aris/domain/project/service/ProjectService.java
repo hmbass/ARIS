@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,13 +99,23 @@ public class ProjectService {
     
     /**
      * 프로젝트 목록 조회 (검색 및 필터링)
+     * Admin은 모든 프로젝트 조회 가능, 일반 사용자는 본인 회사 프로젝트만 조회
      */
     public Page<ProjectResponse> searchProjects(String name, ProjectType projectType,
                                                  ProjectStatus status, Long companyId,
                                                  LocalDate startDate, LocalDate endDate,
                                                  Pageable pageable) {
+        // Admin이 아닌 경우 본인 회사 프로젝트만 조회
+        Long effectiveCompanyId = companyId;
+        if (!isAdmin() && companyId == null) {
+            User currentUser = getCurrentUser();
+            if (currentUser.getCompany() != null) {
+                effectiveCompanyId = currentUser.getCompany().getId();
+            }
+        }
+        
         Page<Project> projects = projectRepository.search(
-                name, projectType, status, companyId, startDate, endDate, pageable);
+                name, projectType, status, effectiveCompanyId, startDate, endDate, pageable);
         return projects.map(ProjectResponse::from);
     }
     
@@ -149,6 +160,26 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
         project.delete();
+    }
+    
+    /**
+     * 현재 로그인 사용자 조회
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+    
+    /**
+     * 현재 사용자가 Admin 권한인지 확인
+     */
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_SYSTEM_ADMIN"));
     }
 }
 

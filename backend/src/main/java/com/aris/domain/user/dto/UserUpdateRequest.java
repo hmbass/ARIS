@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * 사용자 정보 수정 요청 DTO
  */
@@ -23,6 +25,11 @@ public class UserUpdateRequest {
     private String position;
 
     private Long departmentId;
+    
+    @Size(max = 20, message = "사번은 20자 이내여야 합니다.")
+    private String employeeNumber;
+    
+    private List<String> roleNames;  // 역할명 목록
 }
 
 

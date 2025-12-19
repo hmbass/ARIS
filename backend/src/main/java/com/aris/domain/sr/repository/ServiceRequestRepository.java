@@ -68,12 +68,55 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
                                  Pageable pageable);
     
     /**
-     * 연도/월별 SR 개수 조회 (자동 채번용)
+     * 연도/월별 SR 개수 조회 (자동 채번용) - 삭제된 것 포함
      */
     @Query("SELECT COUNT(sr) FROM ServiceRequest sr " +
            "WHERE EXTRACT(YEAR FROM sr.requestDate) = :year " +
-           "AND EXTRACT(MONTH FROM sr.requestDate) = :month " +
-           "AND sr.deletedAt IS NULL")
+           "AND EXTRACT(MONTH FROM sr.requestDate) = :month")
     Long countByYearAndMonth(@Param("year") int year, @Param("month") int month);
+    
+    /**
+     * 특정 패턴으로 시작하는 SR 번호 중 가장 큰 번호 조회 (자동 채번용)
+     */
+    @Query("SELECT MAX(sr.srNumber) FROM ServiceRequest sr WHERE sr.srNumber LIKE :prefix%")
+    String findMaxSrNumberByPrefix(@Param("prefix") String prefix);
+    
+    /**
+     * 전체 SR 개수 (삭제되지 않은 것만)
+     */
+    long countByDeletedAtIsNull();
+    
+    /**
+     * 요청자별 SR 개수 (삭제되지 않은 것만)
+     */
+    long countByRequesterIdAndDeletedAtIsNull(Long requesterId);
+    
+    /**
+     * 승인 요청 가능한 SR 목록 조회 (승인요청 또는 반려 상태인 것만)
+     */
+    @Query("SELECT sr FROM ServiceRequest sr " +
+           "WHERE sr.status IN ('APPROVAL_REQUESTED', 'REJECTED') " +
+           "AND sr.deletedAt IS NULL " +
+           "ORDER BY sr.requestDate DESC")
+    List<ServiceRequest> findApprovable();
+    
+    /**
+     * 요청자의 승인 요청 가능한 SR 목록 조회
+     */
+    @Query("SELECT sr FROM ServiceRequest sr " +
+           "WHERE sr.requester.id = :requesterId " +
+           "AND sr.status IN ('APPROVAL_REQUESTED', 'REJECTED') " +
+           "AND sr.deletedAt IS NULL " +
+           "ORDER BY sr.requestDate DESC")
+    List<ServiceRequest> findApprovableByRequesterId(@Param("requesterId") Long requesterId);
+    
+    /**
+     * 요청자의 최근 SR 목록 조회 (대시보드용)
+     */
+    @Query("SELECT sr FROM ServiceRequest sr " +
+           "WHERE sr.requester.id = :requesterId " +
+           "AND sr.deletedAt IS NULL " +
+           "ORDER BY sr.createdAt DESC")
+    List<ServiceRequest> findRecentByRequesterId(@Param("requesterId") Long requesterId, Pageable pageable);
 }
 

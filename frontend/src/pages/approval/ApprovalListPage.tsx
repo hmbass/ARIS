@@ -41,16 +41,40 @@ const ApprovalListPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
-      PENDING: 'warning', APPROVED: 'success', REJECTED: 'error',
+      PENDING: 'warning', APPROVED: 'success', REJECTED: 'error', CANCELLED: 'default',
     };
     return colors[status] || 'default';
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      PENDING: '대기중', APPROVED: '승인됨', REJECTED: '반려됨',
+      PENDING: '대기중', APPROVED: '승인됨', REJECTED: '반려됨', CANCELLED: '취소됨',
     };
     return labels[status] || status;
+  };
+
+  const getApprovalTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      SR: 'SR', SPEC: 'SPEC', RELEASE: '릴리즈', DATA_EXTRACTION: '데이터추출',
+    };
+    return labels[type] || type;
+  };
+
+  // 현재 승인 단계의 승인자 이름 가져오기
+  const getCurrentApproverName = (approval: Approval) => {
+    if (!approval.approvalLines || approval.approvalLines.length === 0) {
+      return '-';
+    }
+    const currentLine = approval.approvalLines.find(line => line.stepOrder === approval.currentStep);
+    return currentLine?.approverName || '-';
+  };
+
+  // 모든 승인자 이름 가져오기
+  const getAllApproverNames = (approval: Approval) => {
+    if (!approval.approvalLines || approval.approvalLines.length === 0) {
+      return '-';
+    }
+    return approval.approvalLines.map(line => line.approverName).join(' → ');
   };
 
   return (
@@ -75,12 +99,13 @@ const ApprovalListPage: React.FC = () => {
               <Card key={approval.id} sx={{ cursor: 'pointer', width: '100%' }} onClick={() => navigate(`/approvals/${approval.id}`)}>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                    <Typography variant="h6" component="div" sx={{ flex: 1, mr: 1 }}>{approval.requestTitle}</Typography>
+                    <Typography variant="h6" component="div" sx={{ flex: 1, mr: 1 }}>{approval.approvalNumber}</Typography>
                     <Chip label={getStatusLabel(approval.status)} color={getStatusColor(approval.status)} size="small" />
                   </Box>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>유형: {approval.requestType}</Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>요청자: {approval.requestorName}</Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>승인자: {approval.approverName}</Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>유형: {getApprovalTypeLabel(approval.approvalType)}</Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>요청자: {approval.requesterName}</Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>승인자: {getAllApproverNames(approval)}</Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>진행: {approval.currentStep}/{approval.totalSteps}단계</Typography>
                   <Typography variant="body2" color="text.secondary">요청일: {new Date(approval.createdAt).toLocaleDateString()}</Typography>
                 </CardContent>
               </Card>
@@ -95,7 +120,13 @@ const ApprovalListPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell><TableCell>유형</TableCell><TableCell>요청 제목</TableCell><TableCell>요청자</TableCell><TableCell>승인자</TableCell><TableCell>상태</TableCell><TableCell>요청일</TableCell>
+                <TableCell>승인번호</TableCell>
+                <TableCell>유형</TableCell>
+                <TableCell>요청자</TableCell>
+                <TableCell>승인자</TableCell>
+                <TableCell>진행단계</TableCell>
+                <TableCell>상태</TableCell>
+                <TableCell>요청일</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -106,11 +137,11 @@ const ApprovalListPage: React.FC = () => {
               ) : (
                 approvals.map((approval) => (
                   <TableRow key={approval.id} hover onClick={() => navigate(`/approvals/${approval.id}`)} sx={{ cursor: 'pointer' }}>
-                    <TableCell>{approval.id}</TableCell>
-                    <TableCell>{approval.requestType}</TableCell>
-                    <TableCell>{approval.requestTitle}</TableCell>
-                    <TableCell>{approval.requestorName}</TableCell>
-                    <TableCell>{approval.approverName}</TableCell>
+                    <TableCell>{approval.approvalNumber}</TableCell>
+                    <TableCell><Chip label={getApprovalTypeLabel(approval.approvalType)} size="small" color="primary" /></TableCell>
+                    <TableCell>{approval.requesterName}</TableCell>
+                    <TableCell>{getCurrentApproverName(approval)}</TableCell>
+                    <TableCell>{approval.currentStep}/{approval.totalSteps}</TableCell>
                     <TableCell><Chip label={getStatusLabel(approval.status)} color={getStatusColor(approval.status)} size="small" /></TableCell>
                     <TableCell>{new Date(approval.createdAt).toLocaleDateString()}</TableCell>
                   </TableRow>

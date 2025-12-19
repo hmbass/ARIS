@@ -3,10 +3,12 @@ package com.aris.domain.release.service;
 import com.aris.domain.company.repository.DepartmentRepository;
 import com.aris.domain.release.dto.ReleaseRequest;
 import com.aris.domain.release.dto.ReleaseResponse;
+import com.aris.domain.release.dto.ReleaseUpdateRequest;
 import com.aris.domain.release.entity.Release;
 import com.aris.domain.release.entity.ReleaseStatus;
 import com.aris.domain.release.entity.ReleaseType;
 import com.aris.domain.release.repository.ReleaseRepository;
+import com.aris.domain.user.entity.User;
 import com.aris.domain.user.repository.UserRepository;
 import com.aris.global.common.service.NumberingService;
 import com.aris.global.exception.BusinessException;
@@ -15,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,9 +46,14 @@ public class ReleaseService {
         // 자동 채번
         String releaseNumber = numberingService.generateReleaseNumber();
         
-        // 요청자 조회
-        var requester = userRepository.findById(request.requesterId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        // 요청자 조회 (requesterId가 null이면 현재 로그인 사용자 사용)
+        User requester;
+        if (request.requesterId() != null) {
+            requester = userRepository.findById(request.requesterId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        } else {
+            requester = getCurrentUser();
+        }
         
         // 릴리즈 생성
         var releaseBuilder = Release.builder()
@@ -94,10 +105,19 @@ public class ReleaseService {
     }
     
     /**
+     * 승인 가능한 릴리즈 목록 조회
+     */
+    public List<ReleaseResponse> getApprovableReleases() {
+        return releaseRepository.findApprovableReleases().stream()
+                .map(ReleaseResponse::from)
+                .toList();
+    }
+    
+    /**
      * 릴리즈 수정
      */
     @Transactional
-    public ReleaseResponse updateRelease(Long id, ReleaseRequest request) {
+    public ReleaseResponse updateRelease(Long id, ReleaseUpdateRequest request) {
         Release release = releaseRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RELEASE_NOT_FOUND));
         
@@ -167,6 +187,16 @@ public class ReleaseService {
         release.delete();
         
         log.info("릴리즈 삭제 완료: {}", release.getReleaseNumber());
+    }
+    
+    /**
+     * 현재 로그인 사용자 조회
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }
 

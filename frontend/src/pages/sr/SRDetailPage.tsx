@@ -67,6 +67,7 @@ const SRDetailPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
       REQUESTED: 'primary',
+      APPROVAL_REQUESTED: 'warning',
       APPROVED: 'primary',
       IN_PROGRESS: 'warning',
       COMPLETED: 'success',
@@ -79,6 +80,7 @@ const SRDetailPage: React.FC = () => {
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
       REQUESTED: '요청됨',
+      APPROVAL_REQUESTED: '승인요청',
       APPROVED: '승인됨',
       IN_PROGRESS: '진행중',
       COMPLETED: '완료',
@@ -171,9 +173,12 @@ const SRDetailPage: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: { xs: 2, sm: 3 }, width: '100%' }}>
-        <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>
-          {sr.title}
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Typography variant={isMobile ? 'h5' : 'h4'}>
+            {sr.title}
+          </Typography>
+          <Chip label={sr.srNumber} variant="outlined" />
+        </Box>
 
         <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
           <Chip
@@ -207,64 +212,68 @@ const SRDetailPage: React.FC = () => {
               요청자
             </Typography>
             <Typography variant="body1" gutterBottom>
-              {sr.requestorName}
+              {sr.requesterName} {sr.requesterDeptName && `(${sr.requesterDeptName})`}
             </Typography>
           </Box>
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              희망 완료일
+              요청일
             </Typography>
             <Typography variant="body1" gutterBottom>
-              {sr.expectedDate ? new Date(sr.expectedDate).toLocaleDateString() : '-'}
+              {sr.requestDate || '-'}
             </Typography>
           </Box>
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              실제 완료일
+              완료 희망일
             </Typography>
             <Typography variant="body1" gutterBottom>
-              {sr.completedDate ? new Date(sr.completedDate).toLocaleDateString() : '-'}
+              {sr.dueDate || '-'}
             </Typography>
           </Box>
 
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              예상 공수 (M/D)
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              {sr.estimatedManday || '-'}
-            </Typography>
-          </Box>
+          {sr.specNumber && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                연결된 SPEC
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                {sr.specNumber}
+              </Typography>
+            </Box>
+          )}
 
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              실제 공수 (M/D)
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              {sr.actualManday || '-'}
-            </Typography>
-          </Box>
+          {sr.releaseNumber && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                릴리즈 정보
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                {sr.releaseNumber} ({sr.releaseDate})
+              </Typography>
+            </Box>
+          )}
 
           <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              설명
+              비즈니스 요구사항
             </Typography>
             <Paper
               variant="outlined"
-              sx={{ p: 2, bgcolor: 'grey.50', whiteSpace: 'pre-wrap' }}
+              sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', whiteSpace: 'pre-wrap' }}
             >
-              <Typography variant="body1">{sr.description}</Typography>
+              <Typography variant="body1">{sr.businessRequirement}</Typography>
             </Paper>
           </Box>
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              생성일
+              등록일
             </Typography>
             <Typography variant="body1" gutterBottom>
-              {new Date(sr.createdAt).toLocaleString()}
+              {new Date(sr.createdAt).toLocaleString()} ({sr.createdBy})
             </Typography>
           </Box>
 

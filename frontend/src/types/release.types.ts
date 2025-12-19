@@ -1,24 +1,31 @@
 // 릴리즈 관련 타입 정의
 
+export type ReleaseType = 'EMERGENCY' | 'REGULAR';
+export type ReleaseStatus = 'REQUESTED' | 'APPROVED' | 'DEPLOYED' | 'CANCELLED';
+
 export interface Release {
   id: number;
-  version: string;
-  name: string;
-  description: string;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'RELEASED' | 'CANCELLED';
-  projectId: number;
-  projectName: string;
-  releaseDate?: string;
-  actualReleaseDate?: string;
-  issueCount: number;
+  releaseNumber: string;
+  title: string;
+  releaseType: ReleaseType;
+  status: ReleaseStatus;
+  content?: string;
+  requesterId: number;
+  requesterName: string;
+  requesterDeptName?: string;
+  approverId?: number;
+  approverName?: string;
+  scheduledAt?: string;
+  deployedAt?: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  updatedBy: string;
 }
 
 export interface ReleaseCreateRequest {
   title: string;
-  releaseType: 'EMERGENCY' | 'REGULAR';
+  releaseType: ReleaseType;
   content?: string;
   requesterId?: number;
   requesterDeptId?: number;
@@ -26,25 +33,16 @@ export interface ReleaseCreateRequest {
 }
 
 export interface ReleaseUpdateRequest {
-  version?: string;
-  name?: string;
-  description?: string;
-  status?: 'PLANNED' | 'IN_PROGRESS' | 'RELEASED' | 'CANCELLED';
-  releaseDate?: string;
-  actualReleaseDate?: string;
+  title?: string;
+  content?: string;
+  scheduledAt?: string;
 }
 
 export interface ReleaseListParams {
   page?: number;
   size?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  status?: string;
-  projectId?: number;
-  search?: string;
+  title?: string;
+  releaseType?: ReleaseType;
+  status?: ReleaseStatus;
+  requesterId?: number;
 }
-
-
-
-
-

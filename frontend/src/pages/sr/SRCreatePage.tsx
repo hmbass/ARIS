@@ -23,12 +23,11 @@ const SRCreatePage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState<SrCreateRequest>({
     title: '',
-    description: '',
+    businessRequirement: '',
     srType: 'DEVELOPMENT',
     priority: 'MEDIUM',
     projectId: 0,
-    expectedDate: '',
-    estimatedManday: 0,
+    dueDate: '',
   });
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,7 +56,7 @@ const SRCreatePage: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'projectId' || name === 'estimatedManday' ? Number(value) : value,
+      [name]: name === 'projectId' ? Number(value) : value,
     }));
   };
 
@@ -69,8 +68,8 @@ const SRCreatePage: React.FC = () => {
 
     try {
       // 필수 필드 검증
-      if (!formData.title || !formData.description || !formData.projectId) {
-        setError('제목, 설명, 프로젝트는 필수 입력 항목입니다.');
+      if (!formData.title || !formData.projectId) {
+        setError('제목과 프로젝트는 필수 입력 항목입니다.');
         setLoading(false);
         return;
       }
@@ -78,12 +77,11 @@ const SRCreatePage: React.FC = () => {
       // API 호출을 위한 데이터 준비
       const payload: SrCreateRequest = {
         title: formData.title,
-        description: formData.description,
+        businessRequirement: formData.businessRequirement || '',
         srType: formData.srType,
         priority: formData.priority,
         projectId: formData.projectId,
-        expectedDate: formData.expectedDate || undefined,
-        estimatedManday: formData.estimatedManday || undefined,
+        dueDate: formData.dueDate || undefined,
       };
 
       await createSr(payload);
@@ -91,7 +89,7 @@ const SRCreatePage: React.FC = () => {
       setTimeout(() => navigate('/srs'), 2000); // 2초 후 목록으로 이동
     } catch (err: any) {
       console.error('Failed to create SR:', err);
-      setError(err.message || 'SR 등록에 실패했습니다.');
+      setError(err.response?.data?.message || 'SR 등록에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -137,14 +135,13 @@ const SRCreatePage: React.FC = () => {
 
             <TextField
               fullWidth
-              label="설명"
-              name="description"
-              value={formData.description}
+              label="비즈니스 요구사항"
+              name="businessRequirement"
+              value={formData.businessRequirement}
               onChange={handleChange}
-              required
               multiline
-              rows={4}
-              placeholder="SR 내용을 상세히 입력하세요"
+              rows={6}
+              placeholder="비즈니스 요구사항을 상세히 입력하세요"
             />
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
@@ -194,27 +191,15 @@ const SRCreatePage: React.FC = () => {
               ))}
             </TextField>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2 }}>
-              <TextField
-                fullWidth
-                label="희망 완료일"
-                name="expectedDate"
-                type="date"
-                value={formData.expectedDate}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-              />
-
-              <TextField
-                fullWidth
-                label="예상 공수 (M/D)"
-                name="estimatedManday"
-                type="number"
-                value={formData.estimatedManday || ''}
-                onChange={handleChange}
-                inputProps={{ min: 0, step: 0.5 }}
-              />
-            </Box>
+            <TextField
+              fullWidth
+              label="완료 희망일"
+              name="dueDate"
+              type="date"
+              value={formData.dueDate}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+            />
           </Box>
 
           <Box sx={{ 

@@ -48,5 +48,20 @@ export const getCompanies = async (): Promise<Company[]> => {
   return response.data;
 };
 
+// PM 후보 사용자 목록 조회
+export interface PmCandidate {
+  id: number;
+  email: string;
+  name: string;
+  position?: string;
+}
+
+export const getPmCandidates = async (): Promise<PageResponse<PmCandidate>> => {
+  const response = await apiClient.get<PageResponse<PmCandidate>>('/projects/pm-candidates', {
+    params: { page: 0, size: 1000 }
+  });
+  return response.data;
+};
+
 
 

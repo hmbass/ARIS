@@ -55,6 +55,15 @@ public class AuthController {
         // 개발 환경에서만 임시 비밀번호 반환 (운영 환경에서는 제거 필요)
         return ResponseEntity.ok("임시 비밀번호가 발급되었습니다: " + tempPassword);
     }
+
+    @Operation(summary = "로그아웃", description = "로그아웃 처리합니다. (JWT 기반이므로 클라이언트 측 토큰 삭제 필요)")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        // JWT는 stateless이므로 서버 측에서 특별한 처리가 필요 없음
+        // 클라이언트에서 토큰을 삭제하면 로그아웃 완료
+        // 필요시 여기서 토큰 블랙리스트 처리 가능
+        return ResponseEntity.ok().build();
+    }
 }
 
 

@@ -1,30 +1,35 @@
 // 승인 관리 관련 타입 정의
 
-export interface Approval {
+export type ApprovalType = 'SR' | 'SPEC' | 'RELEASE' | 'DATA_EXTRACTION';
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+export type ApprovalLineStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface ApprovalLine {
   id: number;
-  requestType: 'SR' | 'SPEC' | 'RELEASE';
-  requestId: number;
-  requestTitle: string;
-  requestorId: number;
-  requestorName: string;
-  approverId: number;
+  stepOrder: number;
   approverName: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: ApprovalLineStatus;
   comment?: string;
   approvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface ApprovalRequest {
-  requestType: 'SR' | 'SPEC' | 'RELEASE';
-  requestId: number;
-  approverId: number;
-  comment?: string;
+export interface Approval {
+  id: number;
+  approvalNumber: string;
+  approvalType: ApprovalType;
+  targetId: number;
+  status: ApprovalStatus;
+  currentStep: number;
+  totalSteps: number;
+  requesterName: string;
+  requestedAt?: string;
+  completedAt?: string;
+  approvalLines: ApprovalLine[];
+  createdAt: string;
 }
 
 export interface ApprovalCreateRequest {
-  approvalType: 'SR' | 'SPEC' | 'RELEASE' | 'DATA_EXTRACTION';
+  approvalType: ApprovalType;
   targetId: number;
   approverIds: number[];
 }
@@ -40,8 +45,7 @@ export interface ApprovalListParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   status?: string;
-  requestType?: string;
-  approverId?: number;
+  approvalType?: string;
   search?: string;
 }
 

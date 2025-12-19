@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,14 +108,33 @@ public class ServiceRequestService {
     
     /**
      * SR 목록 조회 (검색 및 필터링)
+     * Admin은 모든 SR 조회 가능, 일반 사용자는 본인이 등록한 SR만 조회
      */
     public Page<SrResponse> searchServiceRequests(String title, SrType srType,
                                                    SrStatus status, Long projectId,
                                                    Long requesterId, LocalDate startDate,
                                                    LocalDate endDate, Pageable pageable) {
+        // Admin이 아닌 경우 본인 SR만 조회
+        Long effectiveRequesterId = requesterId;
+        if (!isAdmin()) {
+            User currentUser = getCurrentUser();
+            effectiveRequesterId = currentUser.getId();
+        }
+        
         Page<ServiceRequest> srs = serviceRequestRepository.search(
-                title, srType, status, projectId, requesterId, startDate, endDate, pageable);
+                title, srType, status, projectId, effectiveRequesterId, startDate, endDate, pageable);
         return srs.map(SrResponse::from);
+    }
+    
+    /**
+     * 현재 사용자의 SR 개수 조회 (Sidebar badge용)
+     */
+    public long countUserServiceRequests() {
+        if (isAdmin()) {
+            return serviceRequestRepository.countByDeletedAtIsNull();
+        }
+        User currentUser = getCurrentUser();
+        return serviceRequestRepository.countByRequesterIdAndDeletedAtIsNull(currentUser.getId());
     }
     
     /**
@@ -154,6 +174,21 @@ public class ServiceRequestService {
     }
     
     /**
+     * 승인 요청 가능한 SR 목록 조회 (승인요청/반려 상태만)
+     * Admin은 모든 승인 대기 SR 조회, 일반 사용자는 본인 SR만 조회
+     */
+    public java.util.List<SrResponse> getApprovableSrs() {
+        java.util.List<ServiceRequest> srs;
+        if (isAdmin()) {
+            srs = serviceRequestRepository.findApprovable();
+        } else {
+            User currentUser = getCurrentUser();
+            srs = serviceRequestRepository.findApprovableByRequesterId(currentUser.getId());
+        }
+        return srs.stream().map(SrResponse::from).toList();
+    }
+    
+    /**
      * 현재 로그인 사용자 조회
      */
     private User getCurrentUser() {
@@ -161,6 +196,16 @@ public class ServiceRequestService {
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+    
+    /**
+     * 현재 사용자가 Admin 권한인지 확인
+     */
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_SYSTEM_ADMIN"));
     }
 }
 

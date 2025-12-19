@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,11 +10,13 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
+  Autocomplete,
 } from '@mui/material';
 import { Save, Cancel } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import apiClient from '../../utils/api';
+import { getPmCandidates, type PmCandidate } from '../../api/project';
 
 interface ProjectFormData {
   code: string;
@@ -23,6 +25,7 @@ interface ProjectFormData {
   projectType: string;
   startDate: string;
   endDate: string;
+  budget: string;
 }
 
 const ProjectCreatePage: React.FC = () => {
@@ -32,6 +35,9 @@ const ProjectCreatePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [users, setUsers] = useState<PmCandidate[]>([]);
+  const [selectedPm, setSelectedPm] = useState<PmCandidate | null>(null);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
   const {
     control,
@@ -42,11 +48,26 @@ const ProjectCreatePage: React.FC = () => {
       code: '',
       name: '',
       description: '',
-      projectType: 'DEVELOPMENT',
+      projectType: 'SI',
       startDate: new Date().toISOString().split('T')[0],
       endDate: '',
+      budget: '',
     },
   });
+
+  useEffect(() => {
+    const fetchPmCandidates = async () => {
+      try {
+        const response = await getPmCandidates();
+        setUsers(response.content);
+      } catch (err) {
+        console.error('Failed to fetch PM candidates:', err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchPmCandidates();
+  }, []);
 
   const onSubmit = async (data: ProjectFormData) => {
     try {
@@ -54,7 +75,13 @@ const ProjectCreatePage: React.FC = () => {
       setError('');
       setSuccess('');
 
-      await apiClient.post('/projects', data);
+      const requestData = {
+        ...data,
+        budget: data.budget ? parseInt(data.budget) : undefined,
+        pmId: selectedPm?.id || undefined,
+      };
+
+      await apiClient.post('/projects', requestData);
       setSuccess('프로젝트가 성공적으로 등록되었습니다.');
       
       // 2초 후 목록으로 이동
@@ -63,7 +90,7 @@ const ProjectCreatePage: React.FC = () => {
       }, 2000);
     } catch (err: any) {
       console.error('Failed to create project:', err);
-      setError(err.message || '프로젝트 등록에 실패했습니다.');
+      setError(err.response?.data?.message || '프로젝트 등록에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -144,6 +171,45 @@ const ProjectCreatePage: React.FC = () => {
             )}
           />
 
+          {/* PM 선택 필드 */}
+          <Autocomplete
+            options={users}
+            getOptionLabel={(option) => `${option.name} (${option.email})`}
+            value={selectedPm}
+            onChange={(_, newValue) => setSelectedPm(newValue)}
+            loading={loadingUsers}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="PM (프로젝트 관리자)"
+                margin="normal"
+                placeholder="PM을 선택하세요"
+                helperText="등록된 사용자 중에서 선택할 수 있습니다"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {loadingUsers ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                <Box>
+                  <Typography variant="body1">{option.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.email} {option.position && `· ${option.position}`}
+                  </Typography>
+                </Box>
+              </li>
+            )}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            fullWidth
+          />
+
           <Controller
             name="description"
             control={control}
@@ -189,6 +255,21 @@ const ProjectCreatePage: React.FC = () => {
                 fullWidth
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
+              />
+            )}
+          />
+
+          <Controller
+            name="budget"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="예산 (원)"
+                type="number"
+                fullWidth
+                margin="normal"
+                placeholder="예: 100000000"
               />
             )}
           />

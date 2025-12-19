@@ -29,6 +29,21 @@ apiClient.interceptors.request.use(
   }
 );
 
+// 로그아웃 처리 함수 (중복 리다이렉트 방지)
+let isRedirecting = false;
+const handleLogout = () => {
+  if (isRedirecting) return;
+  isRedirecting = true;
+  
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  
+  // 현재 로그인 페이지가 아닌 경우에만 리다이렉트
+  if (!window.location.pathname.includes('/login')) {
+    window.location.href = '/login';
+  }
+};
+
 // Response Interceptor - 에러 처리
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -37,8 +52,8 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 또는 403 에러 (인증 실패 / 권한 없음) - 토큰 갱신 시도
-    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+    // 401 에러 (인증 실패) - 토큰 갱신 시도
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
@@ -56,17 +71,23 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         } else {
           // refreshToken이 없으면 로그아웃
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
+          handleLogout();
         }
       } catch (refreshError) {
         // 토큰 갱신 실패 - 로그아웃 처리
-        console.error('토큰 갱신 실패:', refreshError);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        handleLogout();
         return Promise.reject(refreshError);
+      }
+    }
+    
+    // 403 에러 (토큰 만료로 인한 권한 없음) - accessToken이 없거나 만료된 경우
+    if (error.response?.status === 403) {
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      // 토큰이 없거나 갱신 시도 후에도 403이면 로그아웃
+      if (!accessToken || !refreshToken || originalRequest._retry) {
+        handleLogout();
       }
     }
 

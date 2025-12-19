@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,9 +24,11 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     
     @Query("SELECT COUNT(i) FROM Issue i " +
            "WHERE EXTRACT(YEAR FROM i.createdAt) = :year " +
-           "AND EXTRACT(MONTH FROM i.createdAt) = :month " +
-           "AND i.deletedAt IS NULL")
+           "AND EXTRACT(MONTH FROM i.createdAt) = :month")
     Long countByYearAndMonth(@Param("year") int year, @Param("month") int month);
+    
+    @Query("SELECT MAX(i.issueNumber) FROM Issue i WHERE i.issueNumber LIKE :prefix%")
+    String findMaxIssueNumberByPrefix(@Param("prefix") String prefix);
     
     @Query("SELECT i FROM Issue i " +
            "WHERE (:title IS NULL OR i.title LIKE %:title%) " +
@@ -38,6 +41,15 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
                       @Param("reporterId") Long reporterId,
                       @Param("assigneeId") Long assigneeId,
                       Pageable pageable);
+    
+    /**
+     * 보고자의 최근 이슈 목록 조회 (대시보드용)
+     */
+    @Query("SELECT i FROM Issue i " +
+           "WHERE i.reporter.id = :reporterId " +
+           "AND i.deletedAt IS NULL " +
+           "ORDER BY i.createdAt DESC")
+    List<Issue> findRecentByReporterId(@Param("reporterId") Long reporterId, Pageable pageable);
 }
 
 

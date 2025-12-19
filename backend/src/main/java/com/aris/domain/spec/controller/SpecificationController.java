@@ -104,6 +104,13 @@ public class SpecificationController {
         specificationService.deleteSpecification(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/approvable")
+    @Operation(summary = "승인 요청 가능한 SPEC 목록 조회", description = "승인 요청 가능한 SPEC 목록을 조회합니다.")
+    public ResponseEntity<java.util.List<SpecResponse>> getApprovableSpecs() {
+        java.util.List<SpecResponse> response = specificationService.getApprovableSpecs();
+        return ResponseEntity.ok(response);
+    }
 }
 
 

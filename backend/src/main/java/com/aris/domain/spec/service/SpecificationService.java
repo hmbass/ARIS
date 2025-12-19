@@ -16,10 +16,14 @@ import com.aris.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * SPEC Service
@@ -192,6 +196,41 @@ public class SpecificationService {
         Specification spec = specificationRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SPEC_NOT_FOUND));
         spec.delete();
+    }
+    
+    /**
+     * 승인 요청 가능한 SPEC 목록 조회 (진행중 상태만)
+     * Admin은 모든 승인 대기 SPEC 조회, 일반 사용자는 본인 담당 SPEC만 조회
+     */
+    public List<SpecResponse> getApprovableSpecs() {
+        List<Specification> specs;
+        if (isAdmin()) {
+            specs = specificationRepository.findApprovable();
+        } else {
+            User currentUser = getCurrentUser();
+            specs = specificationRepository.findApprovableByAssigneeId(currentUser.getId());
+        }
+        return specs.stream().map(SpecResponse::from).toList();
+    }
+    
+    /**
+     * 현재 로그인 사용자 조회
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+    
+    /**
+     * 현재 사용자가 Admin 권한인지 확인
+     */
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_SYSTEM_ADMIN"));
     }
 }
 

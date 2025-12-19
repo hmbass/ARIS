@@ -93,6 +93,20 @@ public class ServiceRequestController {
         serviceRequestService.deleteServiceRequest(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/count")
+    @Operation(summary = "SR 개수 조회", description = "사용자 권한에 따른 SR 개수를 조회합니다.")
+    public ResponseEntity<Long> countServiceRequests() {
+        long count = serviceRequestService.countUserServiceRequests();
+        return ResponseEntity.ok(count);
+    }
+    
+    @GetMapping("/approvable")
+    @Operation(summary = "승인 요청 가능한 SR 목록 조회", description = "승인 요청 가능한 SR 목록을 조회합니다.")
+    public ResponseEntity<java.util.List<SrResponse>> getApprovableSrs() {
+        java.util.List<SrResponse> response = serviceRequestService.getApprovableSrs();
+        return ResponseEntity.ok(response);
+    }
 }
 
 

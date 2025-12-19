@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * 사용자 생성 요청 DTO
  */
@@ -31,6 +33,9 @@ public class UserCreateRequest {
     private String phoneNumber;
 
     private Long companyId;
+    
+    @Size(max = 100, message = "회사명은 100자 이내여야 합니다.")
+    private String companyName;  // 직접 입력용 회사명
 
     private Long departmentId;
 
@@ -39,6 +44,8 @@ public class UserCreateRequest {
 
     @Size(max = 50, message = "직급은 50자 이내여야 합니다.")
     private String position;
+    
+    private List<String> roleNames;  // 역할명 목록 (예: ["ROLE_USER", "ROLE_SYSTEM_ADMIN"])
 }
 
 

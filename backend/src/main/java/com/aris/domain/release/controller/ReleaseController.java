@@ -2,6 +2,7 @@ package com.aris.domain.release.controller;
 
 import com.aris.domain.release.dto.ReleaseRequest;
 import com.aris.domain.release.dto.ReleaseResponse;
+import com.aris.domain.release.dto.ReleaseUpdateRequest;
 import com.aris.domain.release.entity.ReleaseStatus;
 import com.aris.domain.release.entity.ReleaseType;
 import com.aris.domain.release.service.ReleaseService;
@@ -12,6 +13,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -62,11 +65,18 @@ public class ReleaseController {
         return ResponseEntity.ok(response);
     }
     
+    @GetMapping("/approvable")
+    @Operation(summary = "승인 가능한 릴리즈 목록 조회", description = "승인 요청 가능한 릴리즈 목록을 조회합니다 (요청됨 상태).")
+    public ResponseEntity<List<ReleaseResponse>> getApprovableReleases() {
+        List<ReleaseResponse> response = releaseService.getApprovableReleases();
+        return ResponseEntity.ok(response);
+    }
+    
     @PutMapping("/{id}")
     @Operation(summary = "릴리즈 수정", description = "릴리즈 정보를 수정합니다.")
     public ResponseEntity<ReleaseResponse> updateRelease(
             @PathVariable Long id,
-            @Valid @RequestBody ReleaseRequest request) {
+            @Valid @RequestBody ReleaseUpdateRequest request) {
         ReleaseResponse response = releaseService.updateRelease(id, request);
         return ResponseEntity.ok(response);
     }
