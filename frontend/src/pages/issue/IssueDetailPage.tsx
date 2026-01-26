@@ -183,3 +183,6 @@ const IssueDetailPage: React.FC = () => {
 export default IssueDetailPage;
 
 
+
+
+

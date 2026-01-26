@@ -221,3 +221,6 @@ const PartnerEditPage: React.FC = () => {
 export default PartnerEditPage;
 
 
+
+
+

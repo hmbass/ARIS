@@ -113,8 +113,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
         }
       } catch (error: any) {
         // 인증 오류 발생 시 interval 중단 (로그인 페이지로 리다이렉트는 api.ts에서 처리)
-        if (error?.code === 'A001' || error?.code === 'A002' || error?.code === 'A003') {
-          console.log('Authentication error, stopping badge refresh');
+        if (error?.status === 401 || error?.status === 403 ||
+            error?.code === 'A001' || error?.code === 'A002' || error?.code === 'A003') {
+          console.log('[Sidebar] 인증 오류 - 배지 갱신 중단');
           if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;

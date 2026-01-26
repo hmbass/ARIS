@@ -92,20 +92,56 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   // 알림 개수 조회
   useEffect(() => {
-    fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 60000); // 1분마다 갱신
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotificationCount = async () => {
-    try {
-      // 실제 알림 API가 없으므로 승인 대기 개수로 대체
-      const response = await apiClient.get('/approvals/count/pending');
-      setUnreadCount(response.data || 0);
-    } catch (error) {
-      // 오류 무시
+    // 토큰이 없으면 실행하지 않음
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      return;
     }
-  };
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let isActive = true;
+
+    const fetchNotificationCount = async () => {
+      // 토큰이 없거나 컴포넌트가 언마운트되면 중단
+      const currentToken = localStorage.getItem('accessToken');
+      if (!currentToken || !isActive) {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        return;
+      }
+
+      try {
+        // 실제 알림 API가 없으므로 승인 대기 개수로 대체
+        const response = await apiClient.get('/approvals/count/pending');
+        if (isActive) {
+          setUnreadCount(response.data || 0);
+        }
+      } catch (error: any) {
+        // 인증 오류 발생 시 interval 중단
+        if (error?.status === 401 || error?.status === 403 || 
+            error?.code === 'A001' || error?.code === 'A002' || error?.code === 'A003') {
+          console.log('[Header] 인증 오류 - 알림 갱신 중단');
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+        // 다른 오류는 무시
+      }
+    };
+
+    fetchNotificationCount();
+    intervalId = setInterval(fetchNotificationCount, 60000); // 1분마다 갱신
+
+    return () => {
+      isActive = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [user]);
 
   const fetchNotifications = async () => {
     setNotificationLoading(true);

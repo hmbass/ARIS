@@ -197,3 +197,6 @@ const SpecDetailPage: React.FC = () => {
 export default SpecDetailPage;
 
 
+
+
+

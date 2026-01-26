@@ -206,3 +206,6 @@ const AssetDetailPage: React.FC = () => {
 export default AssetDetailPage;
 
 
+
+
+

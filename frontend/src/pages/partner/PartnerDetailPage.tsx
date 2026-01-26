@@ -193,3 +193,6 @@ const PartnerDetailPage: React.FC = () => {
 export default PartnerDetailPage;
 
 
+
+
+

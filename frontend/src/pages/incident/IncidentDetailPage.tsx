@@ -188,3 +188,6 @@ const IncidentDetailPage: React.FC = () => {
 export default IncidentDetailPage;
 
 
+
+
+

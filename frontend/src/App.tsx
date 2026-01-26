@@ -366,7 +366,24 @@ const theme = createTheme({
 // Private Route 컴포넌트
 const PrivateRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  
+  // localStorage의 토큰이 없으면 Zustand 상태도 정리하고 로그인으로 이동
+  const accessToken = localStorage.getItem('accessToken');
+  
+  React.useEffect(() => {
+    if (!accessToken && isAuthenticated) {
+      // 토큰은 없는데 Zustand에서는 인증됨으로 되어있는 경우 -> 상태 정리
+      clearAuth();
+    }
+  }, [accessToken, isAuthenticated, clearAuth]);
+  
+  // 토큰이 없거나 인증되지 않은 경우 로그인 페이지로 리다이렉트
+  if (!accessToken || !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
 };
 
 function App() {
